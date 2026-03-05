@@ -1,0 +1,9 @@
+# Ignore IDEA config
+.idea/
+.qtcreator/
+.vscode/
+
+# Ignore build directory
+build/
+bin/
+venv/
