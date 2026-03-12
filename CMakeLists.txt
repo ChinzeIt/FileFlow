@@ -44,7 +44,10 @@ if(APPLE)
             MACOSX_BUNDLE_ICON_FILE app_icons.icns
     )
 endif()
-target_compile_options(FileFlow PRIVATE -Wall -Werror -Wextra -Wreturn-type)
+target_compile_options(FileFlow PRIVATE
+        $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
+        $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Werror -Wreturn-type>
+)
 target_link_libraries(FileFlow PRIVATE Qt6::Core Qt6::Widgets)
 
 find_program(VALGRIND_EXECUTABLE valgrind)
