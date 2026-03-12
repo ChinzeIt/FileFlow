@@ -1,0 +1,231 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: 'Version'
+        required: true
+
+env:
+  VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.app_version || github.ref_name }}
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  get-ci-run:
+    name: Find CI run
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.find.outputs.run_id }}
+
+    steps:
+      - name: Wait for successful CI run for this commit
+        id: find
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const maxAttempts = 30;
+            const intervalMs  = 60_000;
+            
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              console.log(`Attempt ${attempt}/${maxAttempts}: looking for CI run...`);
+            
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner:       context.repo.owner,
+                repo:        context.repo.repo,
+                workflow_id: 'ci.yaml',
+                head_sha:    context.sha,
+                per_page:    1
+              });
+            
+              if (runs.data.total_count > 0) {
+                const run = runs.data.workflow_runs[0];
+            
+                if (run.conclusion === 'success') {
+                  console.log(`CI run ${run.id} succeeded.`);
+                  core.setOutput('run_id', run.id);
+                  return;
+                }
+            
+                if (run.conclusion === 'failure' || run.conclusion === 'cancelled') {
+                  core.setFailed(`CI run ${run.id} ended with: ${run.conclusion}`);
+                  return;
+                }
+            
+                console.log(`CI run status: ${run.status} — waiting...`);
+              } else {
+                console.log('No CI run found yet — waiting...');
+              }
+            
+              await new Promise(r => setTimeout(r, intervalMs));
+            }
+            
+            core.setFailed('Timed out waiting for CI run.');
+
+  package-linux:
+    name: Package Linux → AppImage
+    needs: get-ci-run
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.4.2'
+          cache: true
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: FileFlow-ubuntu-latest
+          path: binary
+          run-id: ${{ needs.get-ci-run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install linuxdeploy
+        run: |
+          sudo apt-get install -y libfuse2
+          wget -qO linuxdeploy https://github.com/linuxdeploy/linuxdeploy/releases/latest/download/linuxdeploy-x86_64.AppImage
+          wget -qO linuxdeploy-plugin-qt https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/latest/download/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy linuxdeploy-plugin-qt
+
+      - name: Create AppDir structure
+        run: |
+          mkdir -p AppDir/usr/bin
+          mkdir -p AppDir/usr/share/applications
+          mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+
+          chmod +x binary/FileFlow
+          cp binary/FileFlow AppDir/usr/bin/FileFlow
+
+          cat > AppDir/usr/share/applications/fileflow.desktop <<EOF
+          [Desktop Entry]
+          Name=FileFlow
+          Exec=FileFlow
+          Icon=fileflow
+          Type=Application
+          Categories=Utility;
+          EOF
+
+          [ -f icons/app_icons.png ] \
+            && cp icons/app_icons.png AppDir/usr/share/icons/hicolor/256x256/apps/fileflow.png \
+            || true
+
+      - name: Build AppImage
+        run: |
+          QMAKE=qmake6 OUTPUT="FileFlow-${{ env.VERSION }}-linux-x86_64.AppImage" \
+            ./linuxdeploy --appdir AppDir --plugin qt --output appimage
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-linux
+          path: FileFlow-${{ env.VERSION }}-linux-x86_64.AppImage
+
+  package-windows:
+    name: Package Windows → ZIP
+    needs: get-ci-run
+    runs-on: windows-latest
+
+    steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.4.2'
+          cache: true
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: FileFlow-windows-latest
+          path: binary
+          run-id: ${{ needs.get-ci-run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy Qt DLLs and ZIP
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path binary -Recurse -Filter FileFlow.exe | Select-Object -First 1
+          if (-not $exe) { throw "FileFlow.exe not found in downloaded artifacts" }
+          $dist = "dist"
+          New-Item -ItemType Directory -Force $dist
+          Copy-Item $exe.FullName "$dist\FileFlow.exe"
+          $qtbin = "${Env:Qt6_DIR}\bin"
+          & "$qtbin\windeployqt.exe" --release --no-translations "$dist\FileFlow.exe"
+          Compress-Archive -Path "$dist\*" `
+            -DestinationPath "FileFlow-${{ env.VERSION }}-windows-x64.zip"
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-windows
+          path: FileFlow-${{ env.VERSION }}-windows-x64.zip
+
+  package-macos:
+    name: Package macOS → DMG
+    needs: get-ci-run
+    runs-on: macos-latest
+
+    steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.4.2'
+          cache: true
+
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: FileFlow-macos-latest
+          path: binary
+          run-id: ${{ needs.get-ci-run.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run macdeployqt and create DMG
+        run: |
+          macdeployqt binary/FileFlow.app -dmg
+          mv binary/FileFlow.dmg "FileFlow-${{ env.VERSION }}-macos-universal.dmg"
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-macos
+          path: FileFlow-${{ env.VERSION }}-macos-universal.dmg
+
+  release:
+    name: Publish GitHub Release
+    needs: [ package-linux, package-windows, package-macos ]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+      - name: Download all packages
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: "FileFlow ${{ env.VERSION }}"
+          draft: false
+          prerelease: ${{ contains(env.VERSION, '-') }}
+          generate_release_notes: true
+          files: |
+            release-assets/FileFlow-${{ env.VERSION }}-linux-x86_64.AppImage
+            release-assets/FileFlow-${{ env.VERSION }}-windows-x64.zip
+            release-assets/FileFlow-${{ env.VERSION }}-macos-universal.dmg
