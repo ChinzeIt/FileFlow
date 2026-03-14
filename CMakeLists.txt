@@ -4,7 +4,9 @@ project(FileFlow)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(CORE_SOURCE)
+set(CORE_SOURCE
+        src/core/movingFiles.cpp
+        src/core/movingFiles.hpp)
 
 set(QT_SOURCE
         src/qt/mainwindow.hpp
@@ -27,6 +29,7 @@ if(APPLE)
 endif()
 
 qt_add_executable(FileFlow
+        WIN32
         ${SOURCE}
         ${RESOURCES}
 )
@@ -77,6 +80,7 @@ add_custom_target(
         --inline-suppr
         --suppress=missingIncludeSystem
         --suppress=unusedFunction
+        --output-file=${CMAKE_BINARY_DIR}/cppcheck.log
         ${CMAKE_SOURCE_DIR}/src
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         VERBATIM
