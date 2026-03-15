@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CORE_SOURCE
         src/core/movingFiles.cpp
-        src/core/movingFiles.hpp)
+        src/core/movingFiles.hpp
+        src/core/utils/pathChecker.hpp)
 
 set(QT_SOURCE
         src/qt/mainwindow.hpp
