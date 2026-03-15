@@ -7,6 +7,7 @@ int main(int argc, char **argv) {
 
     QFont font("San Francisco", 21);
     QApplication::setFont(font);
+    app.setStyleSheet("QWidget { background-color: white; color: black; }");
 
     mainwindow w;
     w.setWindowIcon(QIcon(":/icons/app_icons.png"));
