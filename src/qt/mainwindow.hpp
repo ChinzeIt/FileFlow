@@ -11,9 +11,10 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QProgressBar>
 
 #include "../core/utils/pathChecker.hpp"
-#include "../core/movingFiles.hpp"
+#include "../controller/controller.hpp"
 
 class mainwindow : public QMainWindow {
     Q_OBJECT
@@ -22,7 +23,10 @@ public:
 private Q_SLOTS:
     void onStartButton();
 private:
+    controller controll;
     void setUpUI();
+    void offMainUI();
+    void onMainUI();
     void setConnections();
 
     QWidget* mainWidget = new QWidget();
@@ -45,4 +49,6 @@ private:
     void updateStartButton();
     bool m_validFrom = false;
     bool m_validTo = false;
+    void successFinished();
+    QProgressBar *progressBar;
 };

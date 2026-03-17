@@ -46,6 +46,25 @@ void mainwindow::setUpUI() {
     buttonStart->setEnabled(false);
     buttonStart->setStyleSheet("QPushButton { background-color: red; }");
 
+    progressBar = new QProgressBar(this);
+    progressBar->setTextVisible(false);
+    progressBar->setRange(0, 100);
+    progressBar->setValue(0);
+    progressBar->setFixedHeight(20);
+    progressBar->setGeometry(0, HEIGHT - 20, WIDTH, 20);
+    progressBar->setStyleSheet(R"(
+        QProgressBar {
+            border: none;
+            border-radius: 0px;
+            background-color: transparent;
+        }
+        QProgressBar::chunk {
+            background-color: #00e676;
+            border-radius: 0px;
+        }
+    )");
+    progressBar->hide();
+
     mainLayout->addWidget(labelFrom);
     mainLayout->addWidget(textLineFrom);
     mainLayout->addWidget(labelErrorFrom);
@@ -100,7 +119,45 @@ void mainwindow::updateStartButton() {
 }
 
 void mainwindow::onStartButton() {
-    movingFiles::findAndMoveFiles(textLineFrom->text().toStdString(),
+    offMainUI();
+
+    progressBar->setValue(0);
+    progressBar->show();
+    controll.start(
+        textLineFrom->text().toStdString(),
         textLineTo->text().toStdString(),
-        textLineOther->text().toStdString());
+        textLineOther->text().toStdString(),
+        {
+            .successFinished = [this] { QMetaObject::invokeMethod(this,
+                &mainwindow::successFinished,
+                Qt::QueuedConnection);
+            },
+            .progressWork = [this](int cur, int tot) { QMetaObject::invokeMethod(this, [this, cur, tot] {
+                progressBar->setValue(cur * 100 / tot);
+            }, Qt::QueuedConnection);
+            }
+        }
+        );
+}
+
+void mainwindow::offMainUI() {
+    buttonStart->setEnabled(false);
+    buttonStart->setStyleSheet("QPushButton { background-color: gray; }");
+    textLineFrom->setEnabled(false);
+    textLineTo->setEnabled(false);
+    textLineOther->setEnabled(false);
+}
+
+void mainwindow::onMainUI() {
+    textLineFrom->setEnabled(true);
+    textLineTo->setEnabled(true);
+    textLineOther->setEnabled(true);
+    buttonStart->setStyleSheet("QPushButton { background-color: green; }");
+    buttonStart->setEnabled(true);
+}
+
+void mainwindow::successFinished() {
+    progressBar->hide();
+    onMainUI();
+    qDebug() << "Success finished";
 }
