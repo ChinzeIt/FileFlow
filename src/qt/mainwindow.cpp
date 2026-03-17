@@ -13,6 +13,7 @@ QMainWindow(parent) {
 
     setUpUI();
     setConnections();
+    this->setFocus();
 }
 
 void mainwindow::setUpUI() {
@@ -29,11 +30,13 @@ void mainwindow::setUpUI() {
 
     textLineTo = new QLineEdit(this);
 
-    labelFormat = new QLabel("Format:", this);
+    labelFormat = new QLabel("Format file:", this);
 
     textLineOther = new QLineEdit(this);
 
-    buttonStart = new QPushButton("Start", this);
+    buttonStart = new QPushButton("START", this);
+    buttonStart->setEnabled(false);
+    buttonStart->setStyleSheet("QPushButton { background-color: red; }");
 
     mainLayout->addWidget(labelFrom);
     mainLayout->addWidget(textLineFrom);
@@ -49,9 +52,30 @@ void mainwindow::setUpUI() {
 
 void mainwindow::setConnections() {
     connect(buttonStart, &QPushButton::clicked, this, &mainwindow::onStartButton);
+    connect(textLineFrom, &QLineEdit::textChanged, this, &mainwindow::onTextLineFrom);
+    connect(textLineTo, &QLineEdit::textChanged, this, &mainwindow::onTextLineTo);
+}
+
+void mainwindow::onTextLineFrom() {
+    try {
+        pathChecker(textLineFrom->text().toStdString()).exits().isDirectory().isLink().isKnown().isReadable();
+        qDebug() << "Succes";
+    } catch (const std::exception &e) {
+        qDebug() << e.what();
+    }
+}
+
+void mainwindow::onTextLineTo() {
+    try {
+        pathChecker(textLineTo->text().toStdString()).exits().isDirectory().isLink().isKnown().isWritable();
+        qDebug() << "Succes";
+    } catch (const std::exception &e) {
+        qDebug() << e.what();
+    }
 }
 
 void mainwindow::onStartButton() {
-    moving.findListFiles(textLineFrom->text().toStdString(), textLineOther->text().toStdString());
-    moving.moveFiles(textLineTo->text().toStdString());
+    movingFiles::findAndMoveFiles(textLineFrom->text().toStdString(),
+        textLineTo->text().toStdString(),
+        textLineOther->text().toStdString());
 }

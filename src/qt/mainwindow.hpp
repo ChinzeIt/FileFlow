@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 
+#include "../core/utils/pathChecker.hpp"
 #include "../core/movingFiles.hpp"
 
 class mainwindow : public QMainWindow {
@@ -29,14 +30,14 @@ private:
 
     QLabel* labelFrom;
     QLineEdit* textLineFrom;
+    void onTextLineFrom();
 
     QLabel* labelTo;
     QLineEdit* textLineTo;
+    void onTextLineTo();
 
     QLabel* labelFormat;
     QLineEdit* textLineOther;
 
     QPushButton* buttonStart;
-    
-    movingFiles moving;
 };
