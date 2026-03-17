@@ -31,13 +31,18 @@ private:
     QLabel* labelFrom;
     QLineEdit* textLineFrom;
     void onTextLineFrom();
+    QLabel* labelErrorFrom;
 
     QLabel* labelTo;
     QLineEdit* textLineTo;
     void onTextLineTo();
+    QLabel* labelErrorTo;
 
     QLabel* labelFormat;
     QLineEdit* textLineOther;
 
     QPushButton* buttonStart;
+    void updateStartButton();
+    bool m_validFrom = false;
+    bool m_validTo = false;
 };

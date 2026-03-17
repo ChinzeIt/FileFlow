@@ -26,9 +26,17 @@ void mainwindow::setUpUI() {
 
     textLineFrom = new QLineEdit(this);
 
+    labelErrorFrom = new QLabel(this);
+    labelErrorFrom->setStyleSheet("font-size: 10pt; color: red;");
+    labelErrorFrom->hide();
+
     labelTo = new QLabel("To place:", this);
 
     textLineTo = new QLineEdit(this);
+
+    labelErrorTo = new QLabel(this);
+    labelErrorTo->setStyleSheet("font-size: 10pt; color: red;");
+    labelErrorTo->hide();
 
     labelFormat = new QLabel("Format file:", this);
 
@@ -40,8 +48,10 @@ void mainwindow::setUpUI() {
 
     mainLayout->addWidget(labelFrom);
     mainLayout->addWidget(textLineFrom);
+    mainLayout->addWidget(labelErrorFrom);
     mainLayout->addWidget(labelTo);
     mainLayout->addWidget(textLineTo);
+    mainLayout->addWidget(labelErrorTo);
     mainLayout->addWidget(labelFormat);
     mainLayout->addWidget(textLineOther);
     mainLayout->addStretch();
@@ -59,19 +69,34 @@ void mainwindow::setConnections() {
 void mainwindow::onTextLineFrom() {
     try {
         pathChecker(textLineFrom->text().toStdString()).exits().isDirectory().isLink().isKnown().isReadable();
-        qDebug() << "Succes";
+        labelErrorFrom->hide();
+        m_validFrom = true;
     } catch (const std::exception &e) {
-        qDebug() << e.what();
+        labelErrorFrom->setText("Error: " + QString(e.what()));
+        labelErrorFrom->show();
+        m_validFrom = false;
     }
+    updateStartButton();
 }
 
 void mainwindow::onTextLineTo() {
     try {
         pathChecker(textLineTo->text().toStdString()).exits().isDirectory().isLink().isKnown().isWritable();
-        qDebug() << "Succes";
+        labelErrorTo->hide();
+        m_validTo = true;
     } catch (const std::exception &e) {
-        qDebug() << e.what();
+        labelErrorTo->setText("Error: " + QString(e.what()));
+        labelErrorTo->show();
+        m_validTo = false;
     }
+    updateStartButton();
+}
+
+void mainwindow::updateStartButton() {
+    buttonStart->setEnabled(m_validFrom && m_validTo);
+    buttonStart->setStyleSheet(m_validFrom && m_validTo
+        ? "QPushButton { background-color: green; }"
+        : "QPushButton { background-color: red; }");
 }
 
 void mainwindow::onStartButton() {
