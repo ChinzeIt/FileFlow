@@ -14,7 +14,9 @@ set(CORE_SOURCE
 set(QT_SOURCE
         src/qt/mainwindow.hpp
         src/qt/mainwindow.cpp
-        src/qt/mainwindow.hpp)
+        src/qt/mainwindow.hpp
+        src/qt/fileformatselector.cpp
+        src/qt/fileformatselector.hpp)
 
 SET(SOURCE src/main.cpp ${CORE_SOURCE} ${QT_SOURCE})
 

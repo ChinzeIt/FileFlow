@@ -38,9 +38,7 @@ void mainwindow::setUpUI() {
     labelErrorTo->setStyleSheet("font-size: 10pt; color: red;");
     labelErrorTo->hide();
 
-    labelFormat = new QLabel("Format file:", this);
-
-    textLineOther = new QLineEdit(this);
+    formatSelector = new FileFormatSelector(this);
 
     buttonStart = new QPushButton("START", this);
     buttonStart->setEnabled(false);
@@ -71,8 +69,7 @@ void mainwindow::setUpUI() {
     mainLayout->addWidget(labelTo);
     mainLayout->addWidget(textLineTo);
     mainLayout->addWidget(labelErrorTo);
-    mainLayout->addWidget(labelFormat);
-    mainLayout->addWidget(textLineOther);
+    mainLayout->addWidget(formatSelector, 1);
     mainLayout->addStretch();
     mainLayout->addWidget(buttonStart);
 
@@ -83,6 +80,10 @@ void mainwindow::setConnections() {
     connect(buttonStart, &QPushButton::clicked, this, &mainwindow::onStartButton);
     connect(textLineFrom, &QLineEdit::textChanged, this, &mainwindow::onTextLineFrom);
     connect(textLineTo, &QLineEdit::textChanged, this, &mainwindow::onTextLineTo);
+    connect(formatSelector, &FileFormatSelector::selectionChanged, this, [this](bool hasSelection) {
+        m_validFormats = hasSelection;
+        updateStartButton();
+    });
 }
 
 void mainwindow::onTextLineFrom() {
@@ -112,8 +113,8 @@ void mainwindow::onTextLineTo() {
 }
 
 void mainwindow::updateStartButton() {
-    buttonStart->setEnabled(m_validFrom && m_validTo);
-    buttonStart->setStyleSheet(m_validFrom && m_validTo
+    buttonStart->setEnabled(m_validFrom && m_validTo && m_validFormats);
+    buttonStart->setStyleSheet(m_validFrom && m_validTo && m_validFormats
         ? "QPushButton { background-color: green; }"
         : "QPushButton { background-color: red; }");
 }
@@ -126,7 +127,7 @@ void mainwindow::onStartButton() {
     controll.start(
         textLineFrom->text().toStdString(),
         textLineTo->text().toStdString(),
-        textLineOther->text().toStdString(),
+        "",
         {
             .successFinished = [this] { QMetaObject::invokeMethod(this,
                 &mainwindow::successFinished,
@@ -145,13 +146,13 @@ void mainwindow::offMainUI() {
     buttonStart->setStyleSheet("QPushButton { background-color: gray; }");
     textLineFrom->setEnabled(false);
     textLineTo->setEnabled(false);
-    textLineOther->setEnabled(false);
+    formatSelector->setEnabled(false);
 }
 
 void mainwindow::onMainUI() {
     textLineFrom->setEnabled(true);
     textLineTo->setEnabled(true);
-    textLineOther->setEnabled(true);
+    formatSelector->setEnabled(true);
     buttonStart->setStyleSheet("QPushButton { background-color: green; }");
     buttonStart->setEnabled(true);
 }

@@ -15,6 +15,7 @@
 
 #include "../core/utils/pathChecker.hpp"
 #include "../controller/controller.hpp"
+#include "fileformatselector.hpp"
 
 class mainwindow : public QMainWindow {
     Q_OBJECT
@@ -42,13 +43,13 @@ private:
     void onTextLineTo();
     QLabel* labelErrorTo;
 
-    QLabel* labelFormat;
-    QLineEdit* textLineOther;
+    FileFormatSelector *formatSelector;
 
     QPushButton* buttonStart;
     void updateStartButton();
     bool m_validFrom = false;
     bool m_validTo = false;
+    bool m_validFormats = false;
     void successFinished();
     QProgressBar *progressBar;
 };
