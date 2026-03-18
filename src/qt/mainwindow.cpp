@@ -127,7 +127,7 @@ void mainwindow::onStartButton() {
     controll.start(
         textLineFrom->text().toStdString(),
         textLineTo->text().toStdString(),
-        "",
+        formatSelector->selected(),
         {
             .successFinished = [this] { QMetaObject::invokeMethod(this,
                 &mainwindow::successFinished,

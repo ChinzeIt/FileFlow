@@ -1,6 +1,6 @@
 #include "controller.hpp"
 
-void controller::start(const string &from, const string &to, const string &format, Callback callback) {
+void controller::start(const string &from, const string &to, const vector<string>& format, Callback callback) {
     cancelled = false;
 
     fileThread = thread([this, from, to, format, callback] {

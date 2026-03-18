@@ -17,7 +17,7 @@ public:
 
     void start(const string& from,
                 const string& to,
-                const string& format,
+                const vector<string>& format,
                 Callback callback);
 
     void cancel();
