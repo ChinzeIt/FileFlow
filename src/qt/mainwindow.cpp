@@ -44,6 +44,10 @@ void mainwindow::setUpUI() {
     buttonStart->setEnabled(false);
     buttonStart->setStyleSheet("QPushButton { background-color: red; }");
 
+    labelErrorPaths = new QLabel("Line from and second identical", this);
+    labelErrorPaths->setStyleSheet("font-size: 10pt; color: red;");
+    labelErrorPaths->hide();
+
     progressBar = new QProgressBar(this);
     progressBar->setTextVisible(false);
     progressBar->setRange(0, 100);
@@ -72,6 +76,7 @@ void mainwindow::setUpUI() {
     mainLayout->addWidget(formatSelector, 1);
     mainLayout->addStretch();
     mainLayout->addWidget(buttonStart);
+    mainLayout->addWidget(labelErrorPaths);
 
     setCentralWidget(mainWidget);
 }
@@ -113,8 +118,17 @@ void mainwindow::onTextLineTo() {
 }
 
 void mainwindow::updateStartButton() {
-    buttonStart->setEnabled(m_validFrom && m_validTo && m_validFormats);
-    buttonStart->setStyleSheet(m_validFrom && m_validTo && m_validFormats
+    auto normalize = [](const QString &s) -> QString {
+        return s.endsWith('/') ? s : s + '/';
+    };
+
+    m_validPaths = normalize(textLineFrom->text()) != normalize(textLineTo->text()) ||
+                   textLineFrom->text().isEmpty();
+
+    labelErrorPaths->setVisible(!m_validPaths);
+
+    buttonStart->setEnabled(m_validFrom && m_validTo && m_validFormats && m_validPaths);
+    buttonStart->setStyleSheet(m_validFrom && m_validTo && m_validFormats && m_validPaths
         ? "QPushButton { background-color: green; }"
         : "QPushButton { background-color: red; }");
 }

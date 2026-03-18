@@ -50,6 +50,9 @@ private:
     bool m_validFrom = false;
     bool m_validTo = false;
     bool m_validFormats = false;
+    bool m_validPaths = true;
     void successFinished();
     QProgressBar *progressBar;
+
+    QLabel *labelErrorPaths;
 };
