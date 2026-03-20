@@ -174,5 +174,4 @@ void mainwindow::onMainUI() {
 void mainwindow::successFinished() {
     progressBar->hide();
     onMainUI();
-    qDebug() << "Success finished";
 }
