@@ -93,7 +93,10 @@ void mainwindow::setConnections() {
 
 void mainwindow::onTextLineFrom() {
     try {
-        pathChecker(textLineFrom->text().toStdString()).exits().isDirectory().isLink().isKnown().isReadable();
+        pathChecker(textLineFrom->text().toStdString()).isVirtual().exits().isDirectory().isLink().isKnown().isReadable();
+        labelErrorFrom->hide();
+        m_validFrom = true;
+    } catch (const pathChecker::virtual_path) {
         labelErrorFrom->hide();
         m_validFrom = true;
     } catch (const std::exception &e) {
@@ -106,9 +109,12 @@ void mainwindow::onTextLineFrom() {
 
 void mainwindow::onTextLineTo() {
     try {
-        pathChecker(textLineTo->text().toStdString()).exits().isDirectory().isLink().isKnown().isWritable();
+        pathChecker(textLineTo->text().toStdString()).isVirtual().exits().isDirectory().isLink().isKnown().isWritable();
         labelErrorTo->hide();
         m_validTo = true;
+    } catch (const pathChecker::virtual_path) {
+        labelErrorTo->hide();
+        m_validFrom = true;
     } catch (const std::exception &e) {
         labelErrorTo->setText("Error: " + QString(e.what()));
         labelErrorTo->show();

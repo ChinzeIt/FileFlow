@@ -19,6 +19,15 @@ public:
     m_status_(filesystem::status(path)),
     m_link_status_(filesystem::symlink_status(path)) {}
 
+    struct virtual_path {};
+
+    pathChecker& isVirtual() {
+        if (m_path_.string().find("://") != string::npos
+            || m_path_.string().substr(0, 2) == "\\\\")
+            throw virtual_path{};
+        return *this;
+    }
+
     pathChecker& exits () {
         if (m_status_.type() == filesystem::file_type::not_found)
             throw std::runtime_error("Does not exists");
