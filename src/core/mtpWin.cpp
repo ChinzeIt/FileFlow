@@ -2,10 +2,6 @@
 
 #include "mtpWin.hpp"
 
-#define byte win_byte_override
-#include <PortableDeviceValues.h>
-#undef byte
-
 #include <fstream>
 #include <stdexcept>
 #include <codecvt>
