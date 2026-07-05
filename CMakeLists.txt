@@ -43,7 +43,12 @@ qt_add_executable(FileFlow
 
 # Windows icon
 if(WIN32)
-    target_sources(FileFlow PRIVATE app.rc)
+    target_link_libraries(FileFlow PRIVATE app.rc
+            PortableDeviceGuids   # GUID'ы вроде CLSID_PortableDeviceManager, WPD_DEVICE_OBJECT_ID
+            ole32                 # CoCreateInstance, CoInitializeEx, CoTaskMemFree
+            oleaut32              # SysAllocString и т.п., тянется PortableDevice-заголовками
+            uuid                  # IID_PPV_ARGS / __uuidof для COM-интерфейсов
+    )
 endif()
 
 # macOS icon
