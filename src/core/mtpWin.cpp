@@ -4,14 +4,15 @@
 
 #include <fstream>
 #include <stdexcept>
-#include <codecvt>
 
 namespace {
 
 std::wstring toWide(const std::string &s) {
     if (s.empty()) return {};
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
-    return conv.from_bytes(s);
+        int needed = MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), nullptr, 0);
+        std::wstring result(needed, L'\0');
+        MultiByteToWideChar(CP_UTF8, 0, s.data(), static_cast<int>(s.size()), result.data(), needed);
+        return result;
 }
 
 std::wstring toLowerW(std::wstring s) {
@@ -165,7 +166,7 @@ bool mtpWin::copyToLocal(const mtpFileEntry &entry, const std::wstring &targetDi
 
     CComPtr<IStream> stream;
     DWORD optimalBufferSize = 0;
-    if (FAILED(resources->GetStream(entry.objectId.c_str(), WPD_RESOURCE_DEFAULT_RESOURCE,
+    if (FAILED(resources->GetStream(entry.objectId.c_str(), WPD_RESOURCE_DEFAULT,
                                      STGM_READ, &optimalBufferSize, &stream)))
         return false;
 
