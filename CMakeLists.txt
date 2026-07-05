@@ -9,7 +9,9 @@ set(CORE_SOURCE
         src/core/movingFiles.hpp
         src/core/utils/pathChecker.hpp
         src/controller/controller.cpp
-        src/controller/controller.hpp)
+        src/controller/controller.hpp
+        src/core/mtpWin.cpp
+        src/core/mtpWin.hpp)
 
 set(QT_SOURCE
         src/qt/mainwindow.hpp

@@ -6,6 +6,14 @@ static string toLower(string s) {
     return s;
 }
 
+#ifdef _WIN32
+#include "mtpSource.hpp"
+
+static bool isMtpPath(const filesystem::path &p) {
+    return p.string().find("mtp://") == 0;
+}
+#endif
+
 void movingFiles::findAndMoveFiles(filesystem::path source,
                                    filesystem::path target,
                                    const vector<string>& extension,
@@ -14,6 +22,54 @@ void movingFiles::findAndMoveFiles(filesystem::path source,
     source = resolveVirtualPath(source);
     target = resolveVirtualPath(target);
 #endif
+
+#ifdef _WIN32
+    // Случай "источник — MTP-устройство" обрабатываем отдельной веткой,
+    // потому что для него в принципе нет filesystem::path, который можно
+    // скормить recursive_directory_iterator.
+    if (isMtpPath(source)) {
+        try {
+            mtpAddress addr = parseMtpPath(source.string());
+            mtpSource mtp(addr);
+
+            if (!mtp.isValid()) {
+                std::cout << "Failed to open MTP device\n";
+                return;
+            }
+
+            // target на Windows в этом сценарии предполагается обычной
+            // локальной папкой (E:\ флешка или диск C:\...) — копируем ИЗ
+            // телефона НА диск. Обратное направление (на MTP-устройство)
+            // требует отдельного метода записи и здесь не рассматривается.
+
+            std::vector<mtpFileEntry> matched;
+            mtp.forEachFile([&](const mtpFileEntry &entry) {
+                for (const auto &ext : extension) {
+                    if (entry.extension == std::wstring(ext.begin(), ext.end())) {
+                        matched.push_back(entry);
+                        break;
+                    }
+                }
+            });
+
+            int total = static_cast<int>(matched.size());
+            int current = 0;
+
+            for (const auto &entry : matched) {
+                bool ok = mtp.copyToLocal(entry, target.wstring());
+                if (!ok)
+                    std::wcout << entry.name << L" skipped: copy failed\n";
+
+                if (progress)
+                    progress(current++, total);
+            }
+        } catch (const std::exception &e) {
+            std::cout << "MTP error: " << e.what() << "\n";
+        }
+        return; // Важно: не проваливаемся в обычную filesystem-логику ниже
+    }
+#endif
+
     int total = 0;
     int current = 0;
 
