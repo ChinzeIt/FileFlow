@@ -114,7 +114,7 @@ void mainwindow::onTextLineTo() {
         m_validTo = true;
     } catch (const pathChecker::virtual_path) {
         labelErrorTo->hide();
-        m_validFrom = true;
+        m_validTo = true;
     } catch (const std::exception &e) {
         labelErrorTo->setText("Error: " + QString(e.what()));
         labelErrorTo->show();
