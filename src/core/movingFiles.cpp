@@ -7,7 +7,7 @@ static string toLower(string s) {
 }
 
 #ifdef _WIN32
-#include "mtpSource.hpp"
+#include "mtpWin.hpp"
 
 static bool isMtpPath(const filesystem::path &p) {
     return p.string().find("mtp://") == 0;
@@ -30,7 +30,7 @@ void movingFiles::findAndMoveFiles(filesystem::path source,
     if (isMtpPath(source)) {
         try {
             mtpAddress addr = parseMtpPath(source.string());
-            mtpSource mtp(addr);
+            mtpWin mtp(addr);
 
             if (!mtp.isValid()) {
                 std::cout << "Failed to open MTP device\n";

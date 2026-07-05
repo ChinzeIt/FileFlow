@@ -35,13 +35,13 @@ mtpAddress parseMtpPath(const std::string &path);
 // Основной класс-источник: заменяет собой связку
 // filesystem::recursive_directory_iterator + filesystem::copy_file
 // для случая, когда source или target — MTP-устройство.
-class mtpSource {
+class mtpWin {
 public:
-    explicit mtpSource(const mtpAddress &address);
-    ~mtpSource();
+    explicit mtpWin(const mtpAddress &address);
+    ~mtpWin();
 
-    mtpSource(const mtpSource&) = delete;
-    mtpSource& operator=(const mtpSource&) = delete;
+    mtpWin(const mtpWin&) = delete;
+    mtpWin& operator=(const mtpWin&) = delete;
 
     // Рекурсивно обходит устройство начиная с startObjectId (или корня)
     // и вызывает callback для каждого найденного файла.

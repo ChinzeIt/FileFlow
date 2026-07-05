@@ -79,7 +79,7 @@ std::vector<mtpDeviceInfo> listConnectedMtpDevices() {
     return result;
 }
 
-mtpSource::mtpSource(const mtpAddress &address) {
+mtpWin::mtpWin(const mtpAddress &address) {
     if (FAILED(CoCreateInstance(CLSID_PortableDeviceFTM, nullptr,
                                  CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&m_device_))))
         return;
@@ -101,16 +101,16 @@ mtpSource::mtpSource(const mtpAddress &address) {
         : address.startObjectId;
 }
 
-mtpSource::~mtpSource() {
+mtpWin::~mtpWin() {
     if (m_device_) m_device_->Close();
 }
 
-void mtpSource::forEachFile(const std::function<void(const mtpFileEntry&)> &callback) const {
+void mtpWin::forEachFile(const std::function<void(const mtpFileEntry&)> &callback) const {
     if (!isValid()) return;
     enumerateRecursive(m_rootObjectId_, callback);
 }
 
-void mtpSource::enumerateRecursive(const std::wstring &objectId,
+void mtpWin::enumerateRecursive(const std::wstring &objectId,
                                     const std::function<void(const mtpFileEntry&)> &callback) const {
     CComPtr<IEnumPortableDeviceObjectIDs> enumIds;
     if (FAILED(m_content_->EnumObjects(0, objectId.c_str(), nullptr, &enumIds)))
@@ -157,7 +157,7 @@ void mtpSource::enumerateRecursive(const std::wstring &objectId,
     }
 }
 
-bool mtpSource::copyToLocal(const mtpFileEntry &entry, const std::wstring &targetDir) const {
+bool mtpWin::copyToLocal(const mtpFileEntry &entry, const std::wstring &targetDir) const {
     if (!isValid()) return false;
 
     CComPtr<IPortableDeviceResources> resources;
