@@ -9,9 +9,17 @@
 #include <string>
 #include <vector>
 #include <functional>
+
+// Workaround для C2872 'byte': ambiguous symbol.
+// rpcndr.h (через atlbase.h/windows.h) объявляет глобальный typedef `byte`,
+// который конфликтует со `std::byte`, если где-то выше по include-цепочке
+// (movingFiles.hpp / pathChecker.hpp) есть `using namespace std;`.
+// Подменяем имя на время подключения Windows-заголовков.
+#define byte win_byte_override
 #include <atlbase.h>
 #include <PortableDeviceApi.h>
 #include <PortableDevice.h>
+#undef byte
 
 // Аналог filesystem::directory_entry, но для объекта на MTP-устройстве.
 struct mtpFileEntry {
